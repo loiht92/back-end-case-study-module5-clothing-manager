@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
 
@@ -21,9 +22,6 @@ import java.util.Optional;
 public class CategoryController {
     @Autowired
     private ICategoryService categoryService;
-
-    @Autowired
-    private IClothingService clothingService;
 
     @GetMapping("/category")
     public ResponseEntity<Page<Category>> getAllCategory(Pageable pageable) {
@@ -43,21 +41,12 @@ public class CategoryController {
         return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
-    @PostMapping("/category/{clothing_id}")
-    public ResponseEntity<Object> createCategory(@PathVariable Long clothing_id, @RequestBody Category category) {
-        ResponseObject<Category> responseObject = new ResponseObject<>();
-        try {
-            Clothing clothing = clothingService.findById(clothing_id)
-                    .orElseThrow(() -> new CustomException("CLOTHING ID NOT FOUND !"));
-
-            category.setClothing(clothing);
-            categoryService.save(category);
-            responseObject.setData(clothing);
-        }catch (CustomException e) {
-            responseObject.setMessage(e.getMessage());
-        }
-
-        return new ResponseEntity<>(responseObject, new HttpHeaders(), HttpStatus.CREATED);
+    @PostMapping("/category")
+    public ResponseEntity<Void> createCategory(@RequestBody Category category, UriComponentsBuilder builder) {
+        categoryService.save(category);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(builder.path("/category/{id}").buildAndExpand(category.getId()).toUri());
+        return new ResponseEntity<>(headers, HttpStatus.CREATED);
     }
 
     @PutMapping("/category/{id}")

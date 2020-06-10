@@ -10,17 +10,6 @@ public class Category {
     private String category_name;
     private String producer;
 
-    @ManyToOne
-    private Clothing clothing;
-
-    public Clothing getClothing() {
-        return clothing;
-    }
-
-    public void setClothing(Clothing clothing) {
-        this.clothing = clothing;
-    }
-
     public Long getId() {
         return id;
     }

@@ -1,7 +1,11 @@
 package com.codegym.clothingmanagements.controllers;
 
+import com.codegym.clothingmanagements.CustomException;
+import com.codegym.clothingmanagements.models.Category;
 import com.codegym.clothingmanagements.models.Clothing;
+import com.codegym.clothingmanagements.service.ICategoryService;
 import com.codegym.clothingmanagements.service.IClothingService;
+import com.codegym.clothingmanagements.utils.ResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +22,9 @@ import java.util.Optional;
 public class ClothingController {
     @Autowired
     private IClothingService clothingService;
+
+    @Autowired
+    private ICategoryService categoryService;
 
     @GetMapping("/clothing")
     public ResponseEntity<Page<Clothing>> getAllClothing(Pageable pageable) {
@@ -37,12 +44,21 @@ public class ClothingController {
         return new ResponseEntity<>(clothing, HttpStatus.OK);
     }
 
-    @PostMapping("/clothing")
-    public ResponseEntity<Void> createClothing(@RequestBody Clothing clothing, UriComponentsBuilder builder) {
-        clothingService.save(clothing);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(builder.path("/clothing/{id}").buildAndExpand(clothing.getId()).toUri());
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
+    @PostMapping("/clothing/{category_id}")
+    public ResponseEntity<Object> createClothing(@PathVariable Long category_id, @RequestBody Clothing clothing) {
+        ResponseObject<Clothing> responseObject = new ResponseObject<>();
+        try {
+            Category category = categoryService.findById(category_id)
+                    .orElseThrow(() -> new CustomException("CATEGORY ID NOT FOUND !"));
+
+            clothing.setCategory(category);
+            clothingService.save(clothing);
+            responseObject.setData(clothing);
+        }catch (CustomException e) {
+            responseObject.setMessage(e.getMessage());
+        }
+
+        return new ResponseEntity<>(responseObject, new HttpHeaders(), HttpStatus.CREATED);
     }
 
     @PutMapping("/clothing/{id}")

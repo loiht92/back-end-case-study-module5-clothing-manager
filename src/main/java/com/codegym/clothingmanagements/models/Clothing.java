@@ -13,6 +13,17 @@ public class Clothing {
     private double price;
     private String status;
 
+    @ManyToOne
+    private Category category;
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
     public Long getId() {
         return id;
     }
